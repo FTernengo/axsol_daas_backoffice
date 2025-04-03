@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXSOL DaaS - Formulario de Entregable</title>
-    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="./assets/css/styles.css">
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/styles.css">
 </head>
 <body>
     <div class="container-fluid">
@@ -138,13 +138,13 @@
     <div id="footer-container"></div>
 
     <!-- Scripts -->
-    <script src="./assets/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/js/main.js"></script>
+    <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/main.js"></script>
     <script>
         // Cargar componentes
         document.addEventListener('DOMContentLoaded', function() {
             // Cargar header, sidebar y footer
-            fetch('/components/header.html')
+            fetch('../../components/header.html')
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('header-container').innerHTML = data;

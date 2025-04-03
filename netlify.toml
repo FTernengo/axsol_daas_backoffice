@@ -1,5 +1,5 @@
 [build]
-  publish = "src/axsol-daas-backoffice"
+  publish = "."
   command = ""
 
 [[redirects]]

@@ -175,7 +175,7 @@ const navigation = {
         contentPath = `modules/${module}/${view}.html`;
       } else {
         // Load list view
-        contentPath = `modules/${module}/${view || module}.html`;
+        contentPath = `./modules/${module}/${view || module}.html`;
       }
             
       console.log(`Loading content from: ${contentPath}`);
@@ -628,8 +628,8 @@ const formUtils = {
 
 // Helper function for loading components from modules
 function loadComponent(id, url) {
-  // Normalize URL for Netlify (ensure no leading slash)
-  const normalizedUrl = url.startsWith('/') ? url.substring(1) : url;
+  // Asegurar que la URL use ./ en lugar de /
+  const normalizedUrl = url.startsWith('/') ? '.' + url : url;
   
   return fetch(normalizedUrl)
     .then(response => {

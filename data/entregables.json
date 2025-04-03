@@ -1,0 +1,110 @@
+[
+    {
+      "id": 1,
+      "inspeccionId": 1,
+      "ordenId": 101,
+      "tipo": "Informe",
+      "assetCesiumId": "asset-45678-INF",
+      "token": "tkn-6a7b8c9d0e",
+      "estado": "Aceptado",
+      "fechaPublicacion": "2025-02-20",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 2,
+      "inspeccionId": 1,
+      "ordenId": 101,
+      "tipo": "Ortofoto",
+      "assetCesiumId": "asset-45678-ORTO",
+      "token": "tkn-1a2b3c4d5e",
+      "estado": "Aceptado",
+      "fechaPublicacion": "2025-02-20",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 3,
+      "inspeccionId": 2,
+      "ordenId": 102,
+      "tipo": "Malla 3D",
+      "assetCesiumId": "asset-12345-MESH",
+      "token": "tkn-2f3g4h5i6j",
+      "estado": "Activo",
+      "fechaPublicacion": "2025-03-12",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 4,
+      "inspeccionId": 3,
+      "ordenId": 103,
+      "tipo": "Nube de puntos",
+      "assetCesiumId": "asset-23456-POINT",
+      "token": "tkn-7k8l9m0n1o",
+      "estado": "Observado",
+      "fechaPublicacion": "2025-02-25",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 5,
+      "inspeccionId": 3,
+      "ordenId": 103,
+      "tipo": "Informe",
+      "assetCesiumId": "asset-23456-INF",
+      "token": "tkn-2p3q4r5s6t",
+      "estado": "Aceptado",
+      "fechaPublicacion": "2025-02-25",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 6,
+      "inspeccionId": 4,
+      "ordenId": 104,
+      "tipo": "Ortofoto",
+      "assetCesiumId": "asset-34567-ORTO",
+      "token": "tkn-7u8v9w0x1y",
+      "estado": "Activo",
+      "fechaPublicacion": "2025-03-08",
+      "validacionVencida": true,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 7,
+      "inspeccionId": 5,
+      "ordenId": 105,
+      "tipo": "Nube de puntos",
+      "assetCesiumId": "asset-56789-POINT",
+      "token": "tkn-2z3a4b5c6d",
+      "estado": "Activo",
+      "fechaPublicacion": "2025-03-20",
+      "validacionVencida": false,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 8,
+      "inspeccionId": 8,
+      "ordenId": 106,
+      "tipo": "Video",
+      "assetCesiumId": "asset-67890-VID",
+      "token": "tkn-7e8f9g0h1i",
+      "estado": "Aceptado",
+      "fechaPublicacion": "2025-01-25",
+      "validacionVencida": true,
+      "versionAnteriorId": null
+    },
+    {
+      "id": 9,
+      "inspeccionId": 4,
+      "ordenId": 104,
+      "tipo": "Ortofoto",
+      "assetCesiumId": "asset-34567-ORTO-V2",
+      "token": "tkn-2j3k4l5m6n",
+      "estado": "Activo",
+      "fechaPublicacion": "2025-03-15",
+      "validacionVencida": false,
+      "versionAnteriorId": 6
+    }
+  ]

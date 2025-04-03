@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes - AXSOL DaaS</title>
+    <!-- Fix: Correct paths to CSS files and add Bootstrap CDN + Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+    <!-- Incluir header -->
+    <div id="header-container"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluir sidebar -->
+            <div id="sidebar-container" class="col-md-3 col-lg-2 d-md-block sidebar"></div>
+
+            <!-- Contenido principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Gestión de Clientes</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="cliente-form.html" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Cliente
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contenedor de alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Filtros</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="search-form" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="filtroNombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="filtroNombre" placeholder="Buscar por nombre...">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filtroEstado" class="form-label">Estado</label>
+                                <select class="form-select" id="filtroEstado">
+                                    <option value="">Todos</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                                <button type="reset" class="btn btn-secondary">Limpiar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tabla de clientes -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Listado de Clientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Contacto</th>
+                                        <th>Email</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientesTableBody">
+                                    <!-- Los datos se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <nav>
+                            <ul class="pagination justify-content-center mb-0" id="pagination">
+                                <!-- La paginación se generará dinámicamente -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Incluir footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <!-- Fix: Correct paths to JS files - using relative paths without leading slash -->
+    <script src="../assets/js/bootstrap.min.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Cargar componentes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fix: Use relative paths for component loading
+            // Cargar componentes HTML
+            fetch('../components/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading header:', error);
+                    document.getElementById('header-container').innerHTML = '<div class="alert alert-danger">Error loading header component</div>';
+                });
+
+            fetch('../components/sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading sidebar:', error);
+                    document.getElementById('sidebar-container').innerHTML = '<div class="alert alert-danger">Error loading sidebar component</div>';
+                });
+
+            fetch('../components/footer.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('footer-container').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading footer:', error);
+                    document.getElementById('footer-container').innerHTML = '<div class="alert alert-danger">Error loading footer component</div>';
+                });
+
+            // Cargar datos de clientes
+            loadClientes();
+
+            // Configurar eventos
+            document.getElementById('search-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                filterClientes();
+            });
+
+            document.getElementById('search-form').addEventListener('reset', function(e) {
+                setTimeout(loadClientes, 0);
+            });
+        });
+
+        // Variable para almacenar la página actual
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Cargar clientes
+        function loadClientes() {
+            const clientes = DataService.getAll('clientes');
+            renderClientes(clientes);
+        }
+
+        // Filtrar clientes
+        function filterClientes() {
+            const nombreFilter = document.getElementById('filtroNombre').value;
+            const estadoFilter = document.getElementById('filtroEstado').value;
+            
+            const criteria = {
+                nombre: nombreFilter,
+                estado: estadoFilter
+            };
+            
+            const filteredClientes = DataService.filter('clientes', criteria);
+            renderClientes(filteredClientes);
+        }
+
+        // Renderizar clientes en la tabla
+        function renderClientes(clientes) {
+            const tbody = document.getElementById('clientesTableBody');
+            tbody.innerHTML = '';
+            
+            if (clientes.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="6" class="text-center">No se encontraron clientes</td>';
+                tbody.appendChild(tr);
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            // Paginación
+            const totalPages = Math.ceil(clientes.length / itemsPerPage);
+            if (currentPage > totalPages) {
+                currentPage = 1;
+            }
+            
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedClientes = clientes.slice(start, end);
+            
+            // Renderizar clientes paginados
+            paginatedClientes.forEach(cliente => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${cliente.id}</td>
+                    <td>${cliente.nombre}</td>
+                    <td>${cliente.contacto}</td>
+                    <td>${cliente.email}</td>
+                    <td><span class="badge ${cliente.estado === 'Activo' ? 'bg-success' : 'bg-secondary'}">${cliente.estado}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="proyectos.html?clienteId=${cliente.id}" class="btn btn-info" title="Ver proyectos">
+                                <i class="fas fa-list"></i> Proyectos
+                            </a>
+                            <a href="cliente-form.html?id=${cliente.id}" class="btn btn-warning" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-danger" title="Eliminar" onclick="deleteCliente(${cliente.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Actualizar paginación
+            renderPagination(totalPages);
+        }
+
+        // Renderizar controles de paginación
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) {
+                return;
+            }
+            
+            // Botón anterior
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            `;
+            pagination.appendChild(prevLi);
+            
+            // Páginas
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                pagination.appendChild(li);
+            }
+            
+            // Botón siguiente
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            `;
+            pagination.appendChild(nextLi);
+        }
+
+        // Cambiar página
+        function changePage(page) {
+            if (page < 1) return;
+            currentPage = page;
+            
+            const nombreFilter = document.getElementById('filtroNombre').value;
+            const estadoFilter = document.getElementById('filtroEstado').value;
+            
+            if (nombreFilter || estadoFilter) {
+                filterClientes();
+            } else {
+                loadClientes();
+            }
+        }
+
+        // Eliminar cliente
+        async function deleteCliente(id) {
+            const confirmed = await Utils.confirm('¿Está seguro de eliminar este cliente? Esta acción no se puede deshacer.');
+            if (!confirmed) return;
+            
+            // Verificar si tiene proyectos asociados
+            const proyectos = DataService.getAll('proyectos');
+            const hasProjects = proyectos.some(proyecto => proyecto.clienteId === id);
+            
+            if (hasProjects) {
+                Utils.showNotification('No se puede eliminar el cliente porque tiene proyectos asociados.', 'warning');
+                return;
+            }
+            
+            const success = DataService.delete('clientes', id);
+            if (success) {
+                Utils.showNotification('Cliente eliminado correctamente', 'success');
+                loadClientes();
+            } else {
+                Utils.showNotification('Error al eliminar el cliente', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

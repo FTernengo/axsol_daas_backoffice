@@ -1,0 +1,82 @@
+[
+    {
+      "id": 1,
+      "nombre": "Instalación Central Fotovoltaica",
+      "clienteId": 1,
+      "ubicacion": "Sevilla, España",
+      "fechaInicio": "2023-08-15",
+      "estado": "En Progreso"
+    },
+    {
+      "id": 2,
+      "nombre": "Mantenimiento Torres Eólicas",
+      "clienteId": 1,
+      "ubicacion": "Cádiz, España",
+      "fechaInicio": "2023-06-10",
+      "estado": "Completado"
+    },
+    {
+      "id": 3,
+      "nombre": "Instalación Paneles Comerciales",
+      "clienteId": 2,
+      "ubicacion": "Barcelona, España",
+      "fechaInicio": "2023-09-22",
+      "estado": "En Progreso"
+    },
+    {
+      "id": 4,
+      "nombre": "Auditoría Energética Industrial",
+      "clienteId": 3,
+      "ubicacion": "Madrid, España",
+      "fechaInicio": "2023-07-05",
+      "estado": "Completado"
+    },
+    {
+      "id": 5,
+      "nombre": "Diseño Sistema Fotovoltaico Residencial",
+      "clienteId": 4,
+      "ubicacion": "Valencia, España",
+      "fechaInicio": "2023-10-01",
+      "estado": "Planificación"
+    },
+    {
+      "id": 6,
+      "nombre": "Capacitación Energías Renovables",
+      "clienteId": 5,
+      "ubicacion": "Zaragoza, España",
+      "fechaInicio": "2023-05-20",
+      "estado": "Completado"
+    },
+    {
+      "id": 7,
+      "nombre": "Instalación Baterías Solares",
+      "clienteId": 2,
+      "ubicacion": "Málaga, España",
+      "fechaInicio": "2023-11-15",
+      "estado": "Planificación"
+    },
+    {
+      "id": 8,
+      "nombre": "Expansión Granja Solar",
+      "clienteId": 4,
+      "ubicacion": "Murcia, España",
+      "fechaInicio": "2023-07-30",
+      "estado": "En Progreso"
+    },
+    {
+      "id": 9,
+      "nombre": "Certificación Eficiencia Energética",
+      "clienteId": 6,
+      "ubicacion": "Bilbao, España",
+      "fechaInicio": "2023-04-18",
+      "estado": "Cancelado"
+    },
+    {
+      "id": 10,
+      "nombre": "Modernización Sistema Eólico",
+      "clienteId": 1,
+      "ubicacion": "Almería, España",
+      "fechaInicio": "2023-09-05",
+      "estado": "Planificación"
+    }
+  ]

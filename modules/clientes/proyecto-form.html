@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Proyecto - AXSOL DaaS</title>
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+    <!-- Incluir header -->
+    <div id="header-container"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluir sidebar -->
+            <div id="sidebar-container" class="col-md-3 col-lg-2 d-md-block sidebar"></div>
+
+            <!-- Contenido principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="form-title">Nuevo Proyecto</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="proyectos.html" id="back-button" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contenedor de alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Formulario de proyecto -->
+                <div class="card">
+                    <div class="card-body">
+                        <form id="proyecto-form" class="needs-validation" novalidate>
+                            <input type="hidden" id="proyecto-id">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="nombre" class="form-label">Nombre del Proyecto</label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                    <div class="invalid-feedback">
+                                        El nombre del proyecto es obligatorio.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="clienteId" class="form-label">Cliente</label>
+                                    <select class="form-select" id="clienteId" required>
+                                        <option value="">Seleccione un cliente...</option>
+                                        <!-- Opciones cargadas dinámicamente -->
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Debe seleccionar un cliente.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ubicacion" class="form-label">Ubicación</label>
+                                    <input type="text" class="form-control" id="ubicacion" required>
+                                    <div class="invalid-feedback">
+                                        La ubicación es obligatoria.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                                    <input type="date" class="form-control" id="fechaInicio" required>
+                                    <div class="invalid-feedback">
+                                        La fecha de inicio es obligatoria.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="estado" class="form-label">Estado</label>
+                                    <select class="form-select" id="estado" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Planificación">Planificación</option>
+                                        <option value="En Progreso">En Progreso</option>
+                                        <option value="Completado">Completado</option>
+                                        <option value="Cancelado">Cancelado</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Seleccione un estado.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-secondary" onclick="cancelForm()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Incluir footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="./assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/main.js"></script>
+    <script>
+        // Variables globales
+        let preselectedClienteId = null;
+        
+        // Cargar componentes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar componentes HTML
+            fetch('/components/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                });
+
+            fetch('/components/sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                });
+
+            fetch('/components/footer.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('footer-container').innerHTML = data;
+                });
+
+            // Cargar clientes para el selector
+            loadClientesSelect();
+            
+            // Verificar si hay un cliente preseleccionado
+            preselectedClienteId = Utils.getUrlParam('clienteId');
+            if (preselectedClienteId) {
+                // Modificar botón de volver para regresar a proyectos del cliente
+                document.getElementById('back-button').href = `proyectos.html?clienteId=${preselectedClienteId}`;
+            }
+
+            // Verificar si estamos en modo edición
+            const proyectoId = Utils.getUrlParam('id');
+            if (proyectoId) {
+                // Modo edición
+                document.getElementById('form-title').textContent = 'Editar Proyecto';
+                loadProyectoData(proyectoId);
+            } else if (preselectedClienteId) {
+                // Nuevo proyecto con cliente preseleccionado
+                document.getElementById('clienteId').value = preselectedClienteId;
+                // Deshabilitar cambio de cliente
+                document.getElementById('clienteId').setAttribute('disabled', 'disabled');
+            }
+
+            // Configurar evento submit
+            document.getElementById('proyecto-form').addEventListener('submit', handleSubmit);
+        });
+
+        // Cargar clientes para el selector
+        function loadClientesSelect() {
+            const clientes = DataService.getAll('clientes');
+            const select = document.getElementById('clienteId');
+            
+            // Mantener la opción inicial
+            select.innerHTML = '<option value="">Seleccione un cliente...</option>';
+            
+            // Filtrar solo clientes activos
+            const clientesActivos = clientes.filter(cliente => cliente.estado === 'Activo');
+            
+            // Agregar opciones de clientes
+            clientesActivos.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = cliente.nombre;
+                select.appendChild(option);
+            });
+        }
+
+        // Cargar datos del proyecto para edición
+        function loadProyectoData(id) {
+            const proyecto = DataService.getById('proyectos', id);
+            if (!proyecto) {
+                Utils.showNotification('Proyecto no encontrado', 'danger');
+                setTimeout(() => Utils.redirect('proyectos.html'), 2000);
+                return;
+            }
+
+            document.getElementById('proyecto-id').value = proyecto.id;
+            document.getElementById('nombre').value = proyecto.nombre;
+            document.getElementById('clienteId').value = proyecto.clienteId;
+            document.getElementById('ubicacion').value = proyecto.ubicacion;
+            document.getElementById('fechaInicio').value = proyecto.fechaInicio;
+            document.getElementById('estado').value = proyecto.estado;
+            
+            // Si viene de un cliente específico, asegurarse de volver a sus proyectos
+            if (preselectedClienteId) {
+                document.getElementById('back-button').href = `proyectos.html?clienteId=${preselectedClienteId}`;
+            }
+        }
+
+        // Manejar envío del formulario
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            if (!Utils.validateForm(form)) {
+                Utils.showValidationErrors(form);
+                return;
+            }
+            
+            // Recopilar datos del formulario
+            const proyectoData = {
+                id: document.getElementById('proyecto-id').value || null,
+                nombre: document.getElementById('nombre').value,
+                clienteId: parseInt(document.getElementById('clienteId').value),
+                ubicacion: document.getElementById('ubicacion').value,
+                fechaInicio: document.getElementById('fechaInicio').value,
+                estado: document.getElementById('estado').value
+            };
+            
+            // Guardar proyecto
+            try {
+                const savedProyecto = DataService.save('proyectos', proyectoData);
+                Utils.showNotification('Proyecto guardado correctamente', 'success');
+                
+                // Redireccionar a la lista de proyectos
+                let redirectUrl = 'proyectos.html';
+                if (preselectedClienteId) {
+                    redirectUrl += `?clienteId=${preselectedClienteId}`;
+                }
+                
+                setTimeout(() => Utils.redirect(redirectUrl), 1500);
+            } catch (error) {
+                Utils.showNotification(`Error al guardar el proyecto: ${error.message}`, 'danger');
+            }
+        }
+        
+        // Cancelar formulario
+        function cancelForm() {
+            let redirectUrl = 'proyectos.html';
+            if (preselectedClienteId) {
+                redirectUrl += `?clienteId=${preselectedClienteId}`;
+            }
+            Utils.redirect(redirectUrl);
+        }
+    </script>
+</body>
+</html>

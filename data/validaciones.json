@@ -1,0 +1,58 @@
+[
+    {
+      "id": 1,
+      "entregableId": 1,
+      "usuario": "Carlos Méndez",
+      "accion": "Aprobado",
+      "fecha": "2025-02-22",
+      "comentario": "El informe cumple con todos los requisitos técnicos y de calidad. Se aprueba sin observaciones."
+    },
+    {
+      "id": 2,
+      "entregableId": 2,
+      "usuario": "Carlos Méndez",
+      "accion": "Aprobado",
+      "fecha": "2025-02-22",
+      "comentario": "La ortofoto tiene buena resolución y calidad visual. Cumple con los estándares requeridos."
+    },
+    {
+      "id": 3,
+      "entregableId": 4,
+      "usuario": "María Rodríguez",
+      "accion": "Observado",
+      "fecha": "2025-02-27",
+      "comentario": "La nube de puntos presenta algunas inconsistencias en la zona norte del tanque. Se requiere revisar y corregir."
+    },
+    {
+      "id": 4,
+      "entregableId": 5,
+      "usuario": "María Rodríguez",
+      "accion": "Aprobado",
+      "fecha": "2025-02-28",
+      "comentario": "El informe está completo y detallado. Se aprueba sin observaciones."
+    },
+    {
+      "id": 5,
+      "entregableId": 8,
+      "usuario": "Juan Pérez",
+      "accion": "Aprobado",
+      "fecha": "2025-01-30",
+      "comentario": "El video muestra claramente todas las áreas de interés. Buena calidad y estabilidad."
+    },
+    {
+      "id": 6,
+      "entregableId": 6,
+      "usuario": "Laura Gómez",
+      "accion": "Observado",
+      "fecha": "2025-03-10",
+      "comentario": "La ortofoto presenta algunas distorsiones en los bordes. Se requiere ajustar y volver a procesar."
+    },
+    {
+      "id": 7,
+      "entregableId": 9,
+      "usuario": "Laura Gómez",
+      "accion": "Aprobado",
+      "fecha": "2025-03-17",
+      "comentario": "La nueva versión de la ortofoto corrige todos los problemas identificados previamente. Aprobado."
+    }
+  ]

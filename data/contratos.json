@@ -1,0 +1,42 @@
+[
+    {
+      "id": 1,
+      "proyectoId": 1,
+      "clienteId": 1,
+      "fechaInicio": "2025-01-01",
+      "fechaFin": "2025-12-31",
+      "tipoServicio": "Inspección Drones",
+      "frecuencia": "Mensual",
+      "tarifas": ["Tarifa Estándar", "Tarifa Premium"]
+    },
+    {
+      "id": 2,
+      "proyectoId": 2,
+      "clienteId": 1,
+      "fechaInicio": "2025-02-15",
+      "fechaFin": "2025-08-15",
+      "tipoServicio": "Análisis de Datos",
+      "frecuencia": "Semanal",
+      "tarifas": ["Tarifa Básica"]
+    },
+    {
+      "id": 3,
+      "proyectoId": 3,
+      "clienteId": 2,
+      "fechaInicio": "2025-03-01",
+      "fechaFin": "2026-03-01",
+      "tipoServicio": "Mantenimiento",
+      "frecuencia": "Trimestral",
+      "tarifas": ["Tarifa Empresarial", "Tarifa Personalizada"]
+    },
+    {
+      "id": 4,
+      "proyectoId": 4,
+      "clienteId": 3,
+      "fechaInicio": "2025-04-10",
+      "fechaFin": "2025-10-10",
+      "tipoServicio": "Consultoría",
+      "frecuencia": "Única",
+      "tarifas": ["Tarifa Premium"]
+    }
+  ]

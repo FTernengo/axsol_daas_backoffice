@@ -1,0 +1,51 @@
+[
+    {
+      "id": 1,
+      "proyectoId": 1,
+      "nombre": "Torre de Enfriamiento A42",
+      "tipoActivo": "Torre",
+      "sectorIntegridad": "Crítico"
+    },
+    {
+      "id": 2,
+      "proyectoId": 1,
+      "nombre": "Tanque de Almacenamiento T103",
+      "tipoActivo": "Estructura",
+      "sectorIntegridad": "Crítico"
+    },
+    {
+      "id": 3,
+      "proyectoId": 2,
+      "nombre": "Línea de Transporte L27",
+      "tipoActivo": "Tubería",
+      "sectorIntegridad": "Medio"
+    },
+    {
+      "id": 4,
+      "proyectoId": 3,
+      "nombre": "Planta de Procesamiento PP09",
+      "tipoActivo": "Planta",
+      "sectorIntegridad": "Crítico"
+    },
+    {
+      "id": 5,
+      "proyectoId": 3,
+      "nombre": "Turbina de Generación TG45",
+      "tipoActivo": "Equipo",
+      "sectorIntegridad": "Crítico"
+    },
+    {
+      "id": 6,
+      "proyectoId": 4,
+      "nombre": "Sistema de Bombeo SB-77",
+      "tipoActivo": "Equipo",
+      "sectorIntegridad": "Medio"
+    },
+    {
+      "id": 7,
+      "proyectoId": 2,
+      "nombre": "Estación de Compresión EC-14",
+      "tipoActivo": "Estructura",
+      "sectorIntegridad": "Bajo"
+    }
+  ]

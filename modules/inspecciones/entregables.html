@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXSOL DaaS - Gestión de Entregables</title>
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluir sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 bg-light sidebar" id="sidebar-container"></div>
+            
+            <!-- Contenido principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Incluir header -->
+                <div id="header-container"></div>
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Gestión de Entregables</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" id="btn-nuevo-entregable">
+                            <i class="bi bi-plus"></i> Nuevo Entregable
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Información de la inspección si viene filtrado -->
+                <div id="info-inspeccion" class="card mb-4 d-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Entregables para la inspección ID: <span id="inspeccion-id">ID</span></h5>
+                                <p class="card-text mb-0">Activo: <span id="inspeccion-activo">Nombre del Activo</span></p>
+                                <p class="card-text mb-0">Fecha: <span id="inspeccion-fecha">DD/MM/YYYY</span></p>
+                                <p class="card-text">Estado: <span id="inspeccion-estado" class="badge bg-success">Completada</span></p>
+                            </div>
+                            <a href="./modules/inspecciones/inspecciones.html" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a Inspecciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-inspeccion" class="form-label">Filtrar por Inspección</label>
+                        <select class="form-select" id="filtro-inspeccion">
+                            <option value="">Todas las inspecciones</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-tipo" class="form-label">Filtrar por Tipo</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="Ortofoto">Ortofoto</option>
+                            <option value="Nube de puntos">Nube de puntos</option>
+                            <option value="Malla 3D">Malla 3D</option>
+                            <option value="Informe">Informe</option>
+                            <option value="Video">Video</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-estado" class="form-label">Filtrar por Estado</label>
+                        <select class="form-select" id="filtro-estado">
+                            <option value="">Todos los estados</option>
+                            <option value="Activo">Activo</option>
+                            <option value="Observado">Observado</option>
+                            <option value="Aceptado">Aceptado</option>
+                            <option value="Anulado">Anulado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-validacion" class="form-label">Validación</label>
+                        <select class="form-select" id="filtro-validacion">
+                            <option value="">Todos</option>
+                            <option value="true">Validación vencida</option>
+                            <option value="false">Validación vigente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de Entregables -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Inspección</th>
+                                <th scope="col">Orden de Venta</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Fecha Publicación</th>
+                                <th scope="col">Validación</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-entregables">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <nav aria-label="Paginación de entregables">
+                    <ul class="pagination justify-content-center" id="paginacion-entregables">
+                        <!-- Paginación generada dinámicamente -->
+                    </ul>
+                </nav>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-labelledby="modalConfirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConfirmDeleteLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Está seguro que desea eliminar este entregable? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluir footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="./assets/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/js/main.js"></script>
+    <script>
+        // Variables globales
+        let inspeccionIdFiltro = null;
+
+        // Cargar componentes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar header, sidebar y footer
+            fetch('/components/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                });
+            
+            fetch('/components/sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                    // Marcar como activo el ítem del menú
+                    setTimeout(() => {
+                        const menuItem = document.querySelector('.nav-link[href="./modules/inspecciones/entregables.html"]');
+                        if (menuItem) menuItem.classList.add('active');
+                    }, 100);
+                });
+            
+            fetch('/components/footer.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('footer-container').innerHTML = data;
+                });
+            
+            // Verificar si viene filtrado por inspección
+            const urlParams = new URLSearchParams(window.location.search);
+            inspeccionIdFiltro = urlParams.get('inspeccionId');
+            
+            // Inicializar filtros
+            cargarInspecciones();
+            
+            // Si hay un filtro de inspección, mostrar la información de la inspección
+            if (inspeccionIdFiltro) {
+                cargarInfoInspeccion(inspeccionIdFiltro);
+                document.getElementById('filtro-inspeccion').value = inspeccionIdFiltro;
+                document.getElementById('info-inspeccion').classList.remove('d-none');
+            }
+            
+            // Cargar entregables
+            cargarEntregables();
+            
+            // Event listeners
+            document.getElementById('btn-nuevo-entregable').addEventListener('click', function() {
+                let url = '/modules/inspecciones/entregable-form.html';
+                if (inspeccionIdFiltro) {
+                    url += `?inspeccionId=${inspeccionIdFiltro}`;
+                }
+                window.location.href = url;
+            });
+            
+            document.getElementById('filtro-inspeccion').addEventListener('change', function() {
+                inspeccionIdFiltro = this.value;
+                cargarEntregables();
+            });
+            
+            document.getElementById('filtro-tipo').addEventListener('change', cargarEntregables);
+            document.getElementById('filtro-estado').addEventListener('change', cargarEntregables);
+            document.getElementById('filtro-validacion').addEventListener('change', cargarEntregables);
+        });
+        
+        // Función para cargar inspecciones en el filtro
+        async function cargarInspecciones() {
+            try {
+                const [inspeccionesResponse, activosResponse] = await Promise.all([
+                    fetch('/data/inspecciones.json'),
+                    fetch('/data/activos.json')
+                ]);
+                
+                const inspecciones = await inspeccionesResponse.json();
+                const activos = await activosResponse.json();
+                
+                // Mapear activos por ID para fácil acceso
+                const activosMap = activos.reduce((map, activo) => {
+                    map[activo.id] = activo;
+                    return map;
+                }, {});
+                
+                const selectInspeccion = document.getElementById('filtro-inspeccion');
+                inspecciones.forEach(inspeccion => {
+                    const activo = activosMap[inspeccion.activoId] || { nombre: 'Desconocido' };
+                    const option = document.createElement('option');
+                    option.value = inspeccion.id;
+                    
+                    const fecha = new Date(inspeccion.fecha);
+                    const fechaFormateada = fecha.toLocaleDateString('es-ES');
+                    
+                    option.textContent = `ID: ${inspeccion.id} - ${activo.nombre} (${fechaFormateada})`;
+                    selectInspeccion.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar inspecciones:', error);
+                mostrarAlerta('No se pudieron cargar las inspecciones', 'danger');
+            }
+        }
+        
+        // Función para cargar información de una inspección específica
+        async function cargarInfoInspeccion(inspeccionId) {
+            try {
+                const [inspeccionesResponse, activosResponse] = await Promise.all([
+                    fetch('/data/inspecciones.json'),
+                    fetch('/data/activos.json')
+                ]);
+                
+                const inspecciones = await inspeccionesResponse.json();
+                const activos = await activosResponse.json();
+                
+                const inspeccion = inspecciones.find(i => i.id == inspeccionId);
+                if (!inspeccion) {
+                    mostrarAlerta('No se encontró la inspección seleccionada', 'warning');
+                    return;
+                }
+                
+                const activo = activos.find(a => a.id == inspeccion.activoId) || { nombre: 'Desconocido' };
+                
+                document.getElementById('inspeccion-id').textContent = inspeccion.id;
+                document.getElementById('inspeccion-activo').textContent = activo.nombre;
+                
+                const fecha = new Date(inspeccion.fecha);
+                document.getElementById('inspeccion-fecha').textContent = fecha.toLocaleDateString('es-ES');
+                
+                const estadoSpan = document.getElementById('inspeccion-estado');
+                estadoSpan.textContent = inspeccion.estado;
+                estadoSpan.className = `badge ${getEstadoBadgeClass(inspeccion.estado)}`;
+            } catch (error) {
+                console.error('Error al cargar información de la inspección:', error);
+                mostrarAlerta('No se pudo cargar la información de la inspección', 'danger');
+            }
+        }
+        
+        // Función para cargar entregables
+        async function cargarEntregables() {
+            try {
+                // Obtener filtros
+                const filtroInspeccion = inspeccionIdFiltro || document.getElementById('filtro-inspeccion').value;
+                const filtroTipo = document.getElementById('filtro-tipo').value;
+                const filtroEstado = document.getElementById('filtro-estado').value;
+                const filtroValidacion = document.getElementById('filtro-validacion').value;
+                
+                // Cargar datos
+                const [entregablesResponse, inspeccionesResponse, ordenesResponse] = await Promise.all([
+                    fetch('/data/entregables.json'),
+                    fetch('/data/inspecciones.json'),
+                    fetch('/data/ordenes.json')
+                ]);
+                
+                const entregables = await entregablesResponse.json();
+                const inspecciones = await inspeccionesResponse.json();
+                const ordenes = await ordenesResponse.json();
+                
+                // Mapear inspecciones y órdenes por ID para fácil acceso
+                const inspeccionesMap = inspecciones.reduce((map, inspeccion) => {
+                    map[inspeccion.id] = inspeccion;
+                    return map;
+                }, {});
+                
+                const ordenesMap = ordenes.reduce((map, orden) => {
+                    map[orden.id] = orden;
+                    return map;
+                }, {});
+                
+                // Filtrar entregables
+                let entregablesFiltrados = entregables;
+                
+                if (filtroInspeccion) {
+                    entregablesFiltrados = entregablesFiltrados.filter(entregable => entregable.inspeccionId == filtroInspeccion);
+                }
+                
+                if (filtroTipo) {
+                    entregablesFiltrados = entregablesFiltrados.filter(entregable => entregable.tipo === filtroTipo);
+                }
+                
+                if (filtroEstado) {
+                    entregablesFiltrados = entregablesFiltrados.filter(entregable => entregable.estado === filtroEstado);
+                }
+                
+                if (filtroValidacion) {
+                    const validacionVencida = filtroValidacion === 'true';
+                    entregablesFiltrados = entregablesFiltrados.filter(entregable => entregable.validacionVencida === validacionVencida);
+                }
+                
+                // Actualizar tabla
+                const tablaEntregables = document.getElementById('tabla-entregables');
+                tablaEntregables.innerHTML = '';
+                
+                if (entregablesFiltrados.length === 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="8" class="text-center">No hay entregables que coincidan con los filtros aplicados</td>';
+                    tablaEntregables.appendChild(tr);
+                } else {
+                    entregablesFiltrados.forEach(entregable => {
+                        const inspeccion = inspeccionesMap[entregable.inspeccionId] || { id: 'Desconocido' };
+                        const orden = entregable.ordenId ? (ordenesMap[entregable.ordenId] || { id: 'Desconocido' }) : null;
+                        
+                        const fechaPublicacion = new Date(entregable.fechaPublicacion);
+                        const fechaFormateada = fechaPublicacion.toLocaleDateString('es-ES');
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${entregable.id}</td>
+                            <td>ID: ${inspeccion.id}</td>
+                            <td>${orden ? `ID: ${orden.id}` : 'No asignado'}</td>
+                            <td>${entregable.tipo}</td>
+                            <td>
+                                <span class="badge ${getEntregableBadgeClass(entregable.estado)}">${entregable.estado}</span>
+                            </td>
+                            <td>${fechaFormateada}</td>
+                            <td>
+                                ${entregable.validacionVencida 
+                                    ? '<span class="badge bg-danger">Vencida</span>' 
+                                    : '<span class="badge bg-success">Vigente</span>'}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="verEntregable(${entregable.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarEntregable(${entregable.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarEntregable(${entregable.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="verValidaciones(${entregable.id})">
+                                        <i class="bi bi-check-circle"></i> Validaciones
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tablaEntregables.appendChild(tr);
+                    });
+                }
+                
+                // Implementar paginación si es necesario
+                actualizarPaginacion(entregablesFiltrados.length);
+                
+            } catch (error) {
+                console.error('Error al cargar entregables:', error);
+                mostrarAlerta('No se pudieron cargar los entregables', 'danger');
+            }
+        }
+        
+        // Función para obtener clase de badge según estado de inspección
+        function getEstadoBadgeClass(estado) {
+            switch(estado) {
+                case 'Planificada': return 'bg-info';
+                case 'En Progreso': return 'bg-warning text-dark';
+                case 'Completada': return 'bg-success';
+                case 'Cancelada': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Función para obtener clase de badge según estado de entregable
+        function getEntregableBadgeClass(estado) {
+            switch(estado) {
+                case 'Activo': return 'bg-primary';
+                case 'Observado': return 'bg-warning text-dark';
+                case 'Aceptado': return 'bg-success';
+                case 'Anulado': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Funciones para acciones de tabla
+        function verEntregable(id) {
+            // Implementar vista detallada (puede ser un modal o redirección)
+            alert(`Ver detalles del entregable ID: ${id}`);
+        }
+        
+        function editarEntregable(id) {
+            window.location.href = `/modules/inspecciones/entregable-form.html?id=${id}`;
+        }
+        
+        function eliminarEntregable(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+            modal.show();
+            
+            document.getElementById('btn-confirm-delete').onclick = async function() {
+                try {
+                    // En un entorno real, aquí iría la lógica para eliminar el entregable de la base de datos
+                    // En este caso, simulamos la eliminación con localStorage
+                    const response = await fetch('/data/entregables.json');
+                    let entregables = await response.json();
+                    
+                    entregables = entregables.filter(entregable => entregable.id !== id);
+                    
+                    localStorage.setItem('entregables', JSON.stringify(entregables));
+                    
+                    modal.hide();
+                    mostrarAlerta('Entregable eliminado correctamente', 'success');
+                    cargarEntregables();
+                } catch (error) {
+                    console.error('Error al eliminar entregable:', error);
+                    mostrarAlerta('No se pudo eliminar el entregable', 'danger');
+                }
+            };
+        }
+        
+        function verValidaciones(entregableId) {
+            window.location.href = `/modules/inspecciones/validaciones.html?entregableId=${entregableId}`;
+        }
+        
+        // Función para mostrar alertas
+        function mostrarAlerta(mensaje, tipo) {
+            const alertPlaceholder = document.createElement('div');
+            alertPlaceholder.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alertPlaceholder.role = 'alert';
+            alertPlaceholder.innerHTML = `
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertPlaceholder);
+            
+            // Auto cerrar después de 5 segundos
+            setTimeout(() => {
+                alertPlaceholder.remove();
+            }, 5000);
+        }
+        
+        // Función para actualizar paginación
+        function actualizarPaginacion(totalItems) {
+            const itemsPorPagina = 10;
+            const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+            
+            const paginacionContainer = document.getElementById('paginacion-entregables');
+            paginacionContainer.innerHTML = '';
+            
+            if (totalPaginas <= 1) return;
+            
+            // Botón anterior
+            const liAnterior = document.createElement('li');
+            liAnterior.className = 'page-item';
+            liAnterior.innerHTML = `<a class="page-link" href="#" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liAnterior);
+            
+            // Páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                const li = document.createElement('li');
+                li.className = i === 1 ? 'page-item active' : 'page-item';
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                paginacionContainer.appendChild(li);
+            }
+            
+            // Botón siguiente
+            const liSiguiente = document.createElement('li');
+            liSiguiente.className = 'page-item';
+            liSiguiente.innerHTML = `<a class="page-link" href="#" aria-label="Siguiente">
+                <span aria-hidden="true">&raquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liSiguiente);
+        }
+    </script>
+</body>

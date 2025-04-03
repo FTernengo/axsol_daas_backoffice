@@ -1,0 +1,30 @@
+[
+    {
+      "id": 1,
+      "estimacionId": 1,
+      "periodoLiquidacion": "2023-04",
+      "estado": "Aceptada",
+      "listoFacturar": true
+    },
+    {
+      "id": 2,
+      "estimacionId": 3,
+      "periodoLiquidacion": "2023-05",
+      "estado": "Pendiente",
+      "listoFacturar": false
+    },
+    {
+      "id": 3,
+      "estimacionId": 6,
+      "periodoLiquidacion": "2023-06",
+      "estado": "Parcial",
+      "listoFacturar": false
+    },
+    {
+      "id": 4,
+      "estimacionId": 1,
+      "periodoLiquidacion": "2023-07",
+      "estado": "Cancelada",
+      "listoFacturar": false
+    }
+  ]

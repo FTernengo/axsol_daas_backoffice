@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXSOL DaaS - Gestión de Validaciones</title>
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluir sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 bg-light sidebar" id="sidebar-container"></div>
+            
+            <!-- Contenido principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Incluir header -->
+                <div id="header-container"></div>
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Gestión de Validaciones</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" id="btn-nueva-validacion">
+                            <i class="bi bi-plus"></i> Nueva Validación
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Información del entregable si viene filtrado -->
+                <div id="info-entregable" class="card mb-4 d-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Validaciones para el entregable ID: <span id="entregable-id">ID</span></h5>
+                                <p class="card-text mb-0">Tipo: <span id="entregable-tipo">Tipo de Entregable</span></p>
+                                <p class="card-text mb-0">Estado: <span id="entregable-estado" class="badge bg-success">Estado</span></p>
+                                <p class="card-text">Fecha de Publicación: <span id="entregable-fecha">DD/MM/YYYY</span></p>
+                            </div>
+                            <a href="./modules/inspecciones/entregables.html" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a Entregables
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="filtro-entregable" class="form-label">Filtrar por Entregable</label>
+                        <select class="form-select" id="filtro-entregable">
+                            <option value="">Todos los entregables</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="filtro-usuario" class="form-label">Filtrar por Usuario</label>
+                        <input type="text" class="form-control" id="filtro-usuario" placeholder="Nombre de usuario">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="filtro-accion" class="form-label">Filtrar por Acción</label>
+                        <select class="form-select" id="filtro-accion">
+                            <option value="">Todas las acciones</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Observado">Observado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de Validaciones -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Entregable</th>
+                                <th scope="col">Usuario</th>
+                                <th scope="col">Acción</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Comentario</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-validaciones">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <nav aria-label="Paginación de validaciones">
+                    <ul class="pagination justify-content-center" id="paginacion-validaciones">
+                        <!-- Paginación generada dinámicamente -->
+                    </ul>
+                </nav>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-labelledby="modalConfirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConfirmDeleteLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Está seguro que desea eliminar esta validación? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluir footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="./assets/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/js/main.js"></script>
+    <script>
+        // Variables globales
+        let entregableIdFiltro = null;
+
+        // Cargar componentes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar header, sidebar y footer
+            fetch('/components/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                });
+            
+            fetch('/components/sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                    // Marcar como activo el ítem del menú
+                    setTimeout(() => {
+                        const menuItem = document.querySelector('.nav-link[href="./modules/inspecciones/validaciones.html"]');
+                        if (menuItem) menuItem.classList.add('active');
+                    }, 100);
+                });
+            
+            fetch('/components/footer.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('footer-container').innerHTML = data;
+                });
+            
+            // Verificar si viene filtrado por entregable
+            const urlParams = new URLSearchParams(window.location.search);
+            entregableIdFiltro = urlParams.get('entregableId');
+            
+            // Inicializar filtros
+            cargarEntregables();
+            
+            // Si hay un filtro de entregable, mostrar la información del entregable
+            if (entregableIdFiltro) {
+                cargarInfoEntregable(entregableIdFiltro);
+                document.getElementById('filtro-entregable').value = entregableIdFiltro;
+                document.getElementById('info-entregable').classList.remove('d-none');
+            }
+            
+            // Cargar validaciones
+            cargarValidaciones();
+            
+            // Event listeners
+            document.getElementById('btn-nueva-validacion').addEventListener('click', function() {
+                let url = '/modules/inspecciones/validacion-form.html';
+                if (entregableIdFiltro) {
+                    url += `?entregableId=${entregableIdFiltro}`;
+                }
+                window.location.href = url;
+            });
+            
+            document.getElementById('filtro-entregable').addEventListener('change', function() {
+                entregableIdFiltro = this.value;
+                cargarValidaciones();
+            });
+            
+            document.getElementById('filtro-usuario').addEventListener('input', cargarValidaciones);
+            document.getElementById('filtro-accion').addEventListener('change', cargarValidaciones);
+        });
+        
+        // Función para cargar entregables en el filtro
+        async function cargarEntregables() {
+            try {
+                const response = await fetch('/data/entregables.json');
+                const entregables = await response.json();
+                
+                const selectEntregable = document.getElementById('filtro-entregable');
+                entregables.forEach(entregable => {
+                    const option = document.createElement('option');
+                    option.value = entregable.id;
+                    option.textContent = `ID: ${entregable.id} - ${entregable.tipo}`;
+                    selectEntregable.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar entregables:', error);
+                mostrarAlerta('No se pudieron cargar los entregables', 'danger');
+            }
+        }
+        
+        // Función para cargar información de un entregable específico
+        async function cargarInfoEntregable(entregableId) {
+            try {
+                const response = await fetch('/data/entregables.json');
+                const entregables = await response.json();
+                
+                const entregable = entregables.find(e => e.id == entregableId);
+                if (!entregable) {
+                    mostrarAlerta('No se encontró el entregable seleccionado', 'warning');
+                    return;
+                }
+                
+                document.getElementById('entregable-id').textContent = entregable.id;
+                document.getElementById('entregable-tipo').textContent = entregable.tipo;
+                
+                const estadoSpan = document.getElementById('entregable-estado');
+                estadoSpan.textContent = entregable.estado;
+                estadoSpan.className = `badge ${getEntregableBadgeClass(entregable.estado)}`;
+                
+                const fecha = new Date(entregable.fechaPublicacion);
+                document.getElementById('entregable-fecha').textContent = fecha.toLocaleDateString('es-ES');
+            } catch (error) {
+                console.error('Error al cargar información del entregable:', error);
+                mostrarAlerta('No se pudo cargar la información del entregable', 'danger');
+            }
+        }
+        
+        // Función para cargar validaciones
+        async function cargarValidaciones() {
+            try {
+                // Obtener filtros
+                const filtroEntregable = entregableIdFiltro || document.getElementById('filtro-entregable').value;
+                const filtroUsuario = document.getElementById('filtro-usuario').value.trim().toLowerCase();
+                const filtroAccion = document.getElementById('filtro-accion').value;
+                
+                // Cargar datos
+                const [validacionesResponse, entregablesResponse] = await Promise.all([
+                    fetch('/data/validaciones.json'),
+                    fetch('/data/entregables.json')
+                ]);
+                
+                const validaciones = await validacionesResponse.json();
+                const entregables = await entregablesResponse.json();
+                
+                // Mapear entregables por ID para fácil acceso
+                const entregablesMap = entregables.reduce((map, entregable) => {
+                    map[entregable.id] = entregable;
+                    return map;
+                }, {});
+                
+                // Filtrar validaciones
+                let validacionesFiltradas = validaciones;
+                
+                if (filtroEntregable) {
+                    validacionesFiltradas = validacionesFiltradas.filter(validacion => validacion.entregableId == filtroEntregable);
+                }
+                
+                if (filtroUsuario) {
+                    validacionesFiltradas = validacionesFiltradas.filter(validacion => 
+                        validacion.usuario.toLowerCase().includes(filtroUsuario)
+                    );
+                }
+                
+                if (filtroAccion) {
+                    validacionesFiltradas = validacionesFiltradas.filter(validacion => validacion.accion === filtroAccion);
+                }
+                
+                // Actualizar tabla
+                const tablaValidaciones = document.getElementById('tabla-validaciones');
+                tablaValidaciones.innerHTML = '';
+                
+                if (validacionesFiltradas.length === 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="7" class="text-center">No hay validaciones que coincidan con los filtros aplicados</td>';
+                    tablaValidaciones.appendChild(tr);
+                } else {
+                    validacionesFiltradas.forEach(validacion => {
+                        const entregable = entregablesMap[validacion.entregableId] || { id: 'Desconocido', tipo: 'Desconocido' };
+                        
+                        const fechaValidacion = new Date(validacion.fecha);
+                        const fechaFormateada = fechaValidacion.toLocaleDateString('es-ES');
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${validacion.id}</td>
+                            <td>ID: ${entregable.id} - ${entregable.tipo}</td>
+                            <td>${validacion.usuario}</td>
+                            <td>
+                                <span class="badge ${getAccionBadgeClass(validacion.accion)}">${validacion.accion}</span>
+                            </td>
+                            <td>${fechaFormateada}</td>
+                            <td>${validacion.comentario}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="verValidacion(${validacion.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarValidacion(${validacion.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarValidacion(${validacion.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tablaValidaciones.appendChild(tr);
+                    });
+                }
+                
+                // Implementar paginación si es necesario
+                actualizarPaginacion(validacionesFiltradas.length);
+                
+            } catch (error) {
+                console.error('Error al cargar validaciones:', error);
+                mostrarAlerta('No se pudieron cargar las validaciones', 'danger');
+            }
+        }
+        
+        // Función para obtener clase de badge según estado de entregable
+        function getEntregableBadgeClass(estado) {
+            switch(estado) {
+                case 'Activo': return 'bg-primary';
+                case 'Observado': return 'bg-warning text-dark';
+                case 'Aceptado': return 'bg-success';
+                case 'Anulado': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Función para obtener clase de badge según acción de validación
+        function getAccionBadgeClass(accion) {
+            switch(accion) {
+                case 'Aprobado': return 'bg-success';
+                case 'Observado': return 'bg-warning text-dark';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Funciones para acciones de tabla
+        function verValidacion(id) {
+            // Implementar vista detallada (puede ser un modal o redirección)
+            alert(`Ver detalles de la validación ID: ${id}`);
+        }
+        
+        function editarValidacion(id) {
+            window.location.href = `/modules/inspecciones/validacion-form.html?id=${id}`;
+        }
+        
+        function eliminarValidacion(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+            modal.show();
+            
+            document.getElementById('btn-confirm-delete').onclick = async function() {
+                try {
+                    // En un entorno real, aquí iría la lógica para eliminar la validación de la base de datos
+                    // En este caso, simulamos la eliminación con localStorage
+                    const response = await fetch('/data/validaciones.json');
+                    let validaciones = await response.json();
+                    
+                    validaciones = validaciones.filter(validacion => validacion.id !== id);
+                    
+                    localStorage.setItem('validaciones', JSON.stringify(validaciones));
+                    
+                    modal.hide();
+                    mostrarAlerta('Validación eliminada correctamente', 'success');
+                    cargarValidaciones();
+                } catch (error) {
+                    console.error('Error al eliminar validación:', error);
+                    mostrarAlerta('No se pudo eliminar la validación', 'danger');
+                }
+            };
+        }
+        
+        // Función para mostrar alertas
+        function mostrarAlerta(mensaje, tipo) {
+            const alertPlaceholder = document.createElement('div');
+            alertPlaceholder.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alertPlaceholder.role = 'alert';
+            alertPlaceholder.innerHTML = `
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertPlaceholder);
+            
+            // Auto cerrar después de 5 segundos
+            setTimeout(() => {
+                alertPlaceholder.remove();
+            }, 5000);
+        }
+        
+        // Función para actualizar paginación
+        function actualizarPaginacion(totalItems) {
+            const itemsPorPagina = 10;
+            const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+            
+            const paginacionContainer = document.getElementById('paginacion-validaciones');
+            paginacionContainer.innerHTML = '';
+            
+            if (totalPaginas <= 1) return;
+            
+            // Botón anterior
+            const liAnterior = document.createElement('li');
+            liAnterior.className = 'page-item';
+            liAnterior.innerHTML = `<a class="page-link" href="#" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liAnterior);
+            
+            // Páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                const li = document.createElement('li');
+                li.className = i === 1 ? 'page-item active' : 'page-item';
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                paginacionContainer.appendChild(li);
+            }
+            
+            // Botón siguiente
+            const liSiguiente = document.createElement('li');
+            liSiguiente.className = 'page-item';
+            liSiguiente.innerHTML = `<a class="page-link" href="#" aria-label="Siguiente">
+                <span aria-hidden="true">&raquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liSiguiente);
+        }
+    </script>
+</body>
+</html>

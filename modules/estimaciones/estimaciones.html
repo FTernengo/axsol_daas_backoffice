@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXSOL DaaS - Estimaciones</title>
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/styles.css">
+    <script src="../../assets/js/main.js" defer></script>
+    <script src="../../assets/js/mock-data.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar componentes HTML
+            loadComponent('header', '../../components/header.html');
+            loadComponent('sidebar', '../../components/sidebar.html');
+            loadComponent('footer', '../../components/footer.html');
+            
+            // Cargar datos de estimaciones y pedidos
+            loadEstimaciones();
+        });
+        
+        // Función para cargar estimaciones
+        function loadEstimaciones() {
+            fetch('../../data/estimaciones.json')
+                .then(response => response.json())
+                .then(estimaciones => {
+                    // Cargar pedidos para obtener información relacionada
+                    fetch('../../data/pedidos.json')
+                        .then(response => response.json())
+                        .then(pedidos => {
+                            renderEstimacionesTable(estimaciones, pedidos);
+                            setupFilters(estimaciones, pedidos);
+                        })
+                        .catch(error => console.error('Error cargando pedidos:', error));
+                })
+                .catch(error => console.error('Error cargando estimaciones:', error));
+        }
+        
+        // Función para renderizar la tabla de estimaciones
+        function renderEstimacionesTable(estimaciones, pedidos) {
+            const tableBody = document.getElementById('estimaciones-table-body');
+            tableBody.innerHTML = '';
+            
+            estimaciones.forEach(estimacion => {
+                const pedido = pedidos.find(p => p.id === estimacion.pedidoId) || { id: 'N/A', contratoId: 'N/A' };
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${estimacion.id}</td>
+                    <td>Pedido #${pedido.id} (Contrato: ${pedido.contratoId})</td>
+                    <td>${estimacion.serviciosEstimados.join(', ')}</td>
+                    <td class="text-end">${formatCurrency(estimacion.totalEstimado)}</td>
+                    <td><span class="badge bg-${getEstadoBadgeClass(estimacion.estado)}">${estimacion.estado}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-info" onclick="viewEstimacion(${estimacion.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="editEstimacion(${estimacion.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="confirmDeleteEstimacion(${estimacion.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            ${estimacion.estado === 'Aprobada' ? 
+                                `<button type="button" class="btn btn-success" onclick="generarOrden(${estimacion.id})">
+                                    <i class="bi bi-file-earmark-plus"></i> Generar OV
+                                </button>` : 
+                                ''}
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Función para establecer filtros
+        function setupFilters(estimaciones, pedidos) {
+            const filterForm = document.getElementById('filter-form');
+            
+            // Llenar selector de pedidos
+            const pedidoSelect = document.getElementById('filter-pedido');
+            const uniquePedidos = [...new Set(estimaciones.map(e => e.pedidoId))];
+            
+            pedidoSelect.innerHTML = '<option value="">Todos los pedidos</option>';
+            uniquePedidos.forEach(pedidoId => {
+                const pedido = pedidos.find(p => p.id === pedidoId);
+                if (pedido) {
+                    const option = document.createElement('option');
+                    option.value = pedidoId;
+                    option.textContent = `Pedido #${pedidoId} (Contrato: ${pedido.contratoId})`;
+                    pedidoSelect.appendChild(option);
+                }
+            });
+            
+            // Llenar selector de estados
+            const estadoSelect = document.getElementById('filter-estado');
+            const estados = [...new Set(estimaciones.map(e => e.estado))];
+            
+            estadoSelect.innerHTML = '<option value="">Todos los estados</option>';
+            estados.forEach(estado => {
+                const option = document.createElement('option');
+                option.value = estado;
+                option.textContent = estado;
+                estadoSelect.appendChild(option);
+            });
+            
+            // Configurar evento de filtrado
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                applyFilters(estimaciones, pedidos);
+            });
+            
+            // Configurar botón de reset
+            document.getElementById('reset-filters').addEventListener('click', function() {
+                filterForm.reset();
+                renderEstimacionesTable(estimaciones, pedidos);
+            });
+        }
+        
+        // Función para aplicar filtros
+        function applyFilters(estimaciones, pedidos) {
+            const pedidoId = document.getElementById('filter-pedido').value;
+            const estado = document.getElementById('filter-estado').value;
+            const montoMin = document.getElementById('filter-monto-min').value;
+            const montoMax = document.getElementById('filter-monto-max').value;
+            
+            let filteredEstimaciones = estimaciones;
+            
+            if (pedidoId) {
+                filteredEstimaciones = filteredEstimaciones.filter(e => e.pedidoId == pedidoId);
+            }
+            
+            if (estado) {
+                filteredEstimaciones = filteredEstimaciones.filter(e => e.estado === estado);
+            }
+            
+            if (montoMin) {
+                filteredEstimaciones = filteredEstimaciones.filter(e => e.totalEstimado >= parseFloat(montoMin));
+            }
+            
+            if (montoMax) {
+                filteredEstimaciones = filteredEstimaciones.filter(e => e.totalEstimado <= parseFloat(montoMax));
+            }
+            
+            renderEstimacionesTable(filteredEstimaciones, pedidos);
+        }
+        
+        // Función para formatear moneda
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
+        }
+        
+        // Función para obtener la clase de la etiqueta según el estado
+        function getEstadoBadgeClass(estado) {
+            switch (estado) {
+                case 'Borrador': return 'secondary';
+                case 'Enviada': return 'info';
+                case 'Aprobada': return 'success';
+                case 'Rechazada': return 'danger';
+                default: return 'primary';
+            }
+        }
+        
+        // Funciones para acciones CRUD
+        function viewEstimacion(id) {
+            // Aquí se implementaría la visualización detallada
+            console.log('Ver estimación', id);
+            // Podría abrir un modal con detalles
+        }
+        
+        function editEstimacion(id) {
+            window.location.href = `estimacion-form.html?id=${id}`;
+        }
+        
+        function confirmDeleteEstimacion(id) {
+            if (confirm(`¿Está seguro de que desea eliminar la estimación #${id}?`)) {
+                deleteEstimacion(id);
+            }
+        }
+        
+        function deleteEstimacion(id) {
+            // Aquí se implementaría la eliminación
+            console.log('Eliminar estimación', id);
+            // En una implementación real, se enviaría una solicitud al backend
+            // Por ahora, simplemente recargamos la página
+            alert(`Estimación #${id} eliminada correctamente`);
+            loadEstimaciones();
+        }
+        
+        function generarOrden(estimacionId) {
+            window.location.href = `orden-form.html?estimacionId=${estimacionId}`;
+        }
+        
+        function newEstimacion() {
+            window.location.href = 'estimacion-form.html';
+        }
+    </script>
+</head>
+<body>
+    <!-- Header Component -->
+    <div id="header"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Component -->
+            <div id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"></div>
+            
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Estimaciones</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" onclick="newEstimacion()">
+                            <i class="bi bi-plus"></i> Nueva Estimación
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-funnel"></i> Filtros
+                    </div>
+                    <div class="card-body">
+                        <form id="filter-form" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="filter-pedido" class="form-label">Pedido</label>
+                                <select id="filter-pedido" class="form-select">
+                                    <option value="">Todos los pedidos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filter-estado" class="form-label">Estado</label>
+                                <select id="filter-estado" class="form-select">
+                                    <option value="">Todos los estados</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filter-monto-min" class="form-label">Monto Mín.</label>
+                                <input type="number" class="form-control" id="filter-monto-min" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filter-monto-max" class="form-label">Monto Máx.</label>
+                                <input type="number" class="form-control" id="filter-monto-max" step="0.01" min="0">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-secondary" id="reset-filters">Limpiar</button>
+                                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Estimaciones -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-table"></i> Listado de Estimaciones
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Pedido</th>
+                                        <th>Servicios</th>
+                                        <th class="text-end">Total Estimado</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="estimaciones-table-body">
+                                    <!-- Aquí se cargarán dinámicamente los datos -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Footer Component -->
+    <div id="footer"></div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

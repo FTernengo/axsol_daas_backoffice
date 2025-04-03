@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXSOL DaaS - Formulario de Estimación</title>
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/styles.css">
+    <script src="../../assets/js/main.js" defer></script>
+    <script src="../../assets/js/mock-data.js" defer></script>
+    <script>
+        let isEditMode = false;
+        let currentEstimacionId = null;
+        let pedidosData = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar componentes HTML
+            loadComponent('header', '../../components/header.html');
+            loadComponent('sidebar', '../../components/sidebar.html');
+            loadComponent('footer', '../../components/footer.html');
+            
+            // Verificar si estamos en modo edición
+            const urlParams = new URLSearchParams(window.location.search);
+            const estimacionId = urlParams.get('id');
+            
+            if (estimacionId) {
+                isEditMode = true;
+                currentEstimacionId = parseInt(estimacionId);
+                document.getElementById('form-title').textContent = 'Editar Estimación';
+                document.getElementById('submit-button').textContent = 'Actualizar Estimación';
+            }
+            
+            // Cargar datos de pedidos para el selector
+            loadPedidosData();
+            
+            // Configurar eventos
+            setupFormEvents();
+        });
+        
+        // Función para cargar los datos de pedidos
+        function loadPedidosData() {
+            fetch('../../data/pedidos.json')
+                .then(response => response.json())
+                .then(pedidos => {
+                    pedidosData = pedidos;
+                    populatePedidoSelect(pedidos);
+                    
+                    // Si estamos en modo edición, cargar datos de la estimación
+                    if (isEditMode) {
+                        loadEstimacionData(currentEstimacionId);
+                    }
+                })
+                .catch(error => console.error('Error cargando pedidos:', error));
+        }
+        
+        // Función para poblar el selector de pedidos
+        function populatePedidoSelect(pedidos) {
+            const pedidoSelect = document.getElementById('pedido-id');
+            pedidoSelect.innerHTML = '<option value="">Seleccione un pedido...</option>';
+            
+            pedidos.forEach(pedido => {
+                fetch('../../data/contratos.json')
+                    .then(response => response.json())
+                    .then(contratos => {
+                        const contrato = contratos.find(c => c.id === pedido.contratoId);
+                        
+                        const option = document.createElement('option');
+                        option.value = pedido.id;
+                        option.textContent = `Pedido #${pedido.id} - Contrato #${contrato ? contrato.id : 'N/A'} - Proyecto: ${contrato ? contrato.proyectoId : 'N/A'}`;
+                        pedidoSelect.appendChild(option);
+                    })
+                    .catch(error => console.error('Error cargando contratos:', error));
+            });
+            
+            // Escuchar cambios en el selector para actualizar información
+            pedidoSelect.addEventListener('change', updatePedidoInfo);
+        }
+        
+        // Función para actualizar información del pedido seleccionado
+        function updatePedidoInfo() {
+            const pedidoId = document.getElementById('pedido-id').value;
+            const pedidoInfoDiv = document.getElementById('pedido-info');
+            
+            if (!pedidoId) {
+                pedidoInfoDiv.innerHTML = '';
+                return;
+            }
+            
+            const pedido = pedidosData.find(p => p.id == pedidoId);
+            
+            if (pedido) {
+                fetch('../../data/contratos.json')
+                    .then(response => response.json())
+                    .then(contratos => {
+                        const contrato = contratos.find(c => c.id === pedido.contratoId);
+                        
+                        if (contrato) {
+                            fetch('../../data/proyectos.json')
+                                .then(response => response.json())
+                                .then(proyectos => {
+                                    const proyecto = proyectos.find(p => p.id === contrato.proyectoId);
+                                    
+                                    pedidoInfoDiv.innerHTML = `
+                                        <div class="alert alert-info">
+                                            <h5>Información del Pedido #${pedido.id}</h5>
+                                            <p><strong>Contrato:</strong> #${contrato.id}</p>
+                                            <p><strong>Proyecto:</strong> ${proyecto ? proyecto.nombre : 'N/A'}</p>
+                                            <p><strong>Descripción Pedido:</strong> ${pedido.descripcion}</p>
+                                        </div>
+                                    `;
+                                })
+                                .catch(error => console.error('Error cargando proyectos:', error));
+                        }
+                    })
+                    .catch(error => console.error('Error cargando contratos:', error));
+            }
+        }
+        
+        // Función para cargar datos de la estimación en modo edición
+        function loadEstimacionData(estimacionId) {
+            fetch('../../data/estimaciones.json')
+                .then(response => response.json())
+                .then(estimaciones => {
+                    const estimacion = estimaciones.find(e => e.id === estimacionId);
+                    
+                    if (estimacion) {
+                        document.getElementById('pedido-id').value = estimacion.pedidoId;
+                        updatePedidoInfo();
+                        
+                        // Cargar servicios estimados
+                        const serviciosContainer = document.getElementById('servicios-container');
+                        serviciosContainer.innerHTML = '';
+                        
+                        estimacion.serviciosEstimados.forEach((servicio, index) => {
+                            addServicioRow(servicio);
+                        });
+                        
+                        document.getElementById('total-estimado').value = estimacion.totalEstimado;
+                        document.getElementById('estado').value = estimacion.estado;
+                    } else {
+                        alert('No se encontró la estimación solicitada.');
+                        window.location.href = 'estimaciones.html';
+                    }
+                })
+                .catch(error => console.error('Error cargando estimaciones:', error));
+        }
+        
+        // Función para configurar eventos del formulario
+        function setupFormEvents() {
+            // Botón para agregar servicio
+            document.getElementById('add-servicio').addEventListener('click', function() {
+                addServicioRow();
+            });
+            
+            // Envío del formulario
+            document.getElementById('estimacion-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (validateForm()) {
+                    saveEstimacion();
+                }
+            });
+            
+            // Botón de cancelar
+            document.getElementById('cancel-button').addEventListener('click', function() {
+                window.location.href = 'estimaciones.html';
+            });
+        }
+        
+        // Función para agregar una fila de servicio
+        function addServicioRow(servicioValue = '') {
+            const serviciosContainer = document.getElementById('servicios-container');
+            const index = serviciosContainer.children.length;
+            
+            const servicioRow = document.createElement('div');
+            servicioRow.className = 'row g-3 mb-2 servicio-row';
+            servicioRow.innerHTML = `
+                <div class="col-10">
+                    <input type="text" class="form-control servicio-input" value="${servicioValue}" placeholder="Nombre del servicio estimado" required>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-danger w-100 remove-servicio" data-index="${index}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            serviciosContainer.appendChild(servicioRow);
+            
+            // Configurar evento para eliminar servicio
+            servicioRow.querySelector('.remove-servicio').addEventListener('click', function() {
+                servicioRow.remove();
+            });
+        }
+        
+        // Función para validar el formulario
+        function validateForm() {
+            const pedidoId = document.getElementById('pedido-id').value;
+            const totalEstimado = document.getElementById('total-estimado').value;
+            const serviciosInputs = document.querySelectorAll('.servicio-input');
+            
+            if (!pedidoId) {
+                alert('Debe seleccionar un pedido.');
+                return false;
+            }
+            
+            if (serviciosInputs.length === 0) {
+                alert('Debe agregar al menos un servicio estimado.');
+                return false;
+            }
+            
+            let allServiciosFilled = true;
+            serviciosInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    allServiciosFilled = false;
+                }
+            });
+            
+            if (!allServiciosFilled) {
+                alert('Todos los servicios deben tener un nombre.');
+                return false;
+            }
+            
+            if (!totalEstimado || parseFloat(totalEstimado) <= 0) {
+                alert('El total estimado debe ser mayor que cero.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Función para guardar la estimación
+        function saveEstimacion() {
+            // Recopilar datos del formulario
+            const pedidoId = parseInt(document.getElementById('pedido-id').value);
+            const estado = document.getElementById('estado').value;
+            const totalEstimado = parseFloat(document.getElementById('total-estimado').value);
+            
+            // Recopilar servicios
+            const serviciosInputs = document.querySelectorAll('.servicio-input');
+            const serviciosEstimados = Array.from(serviciosInputs).map(input => input.value.trim());
+            
+            // Crear objeto de estimación
+            const estimacion = {
+                pedidoId,
+                serviciosEstimados,
+                totalEstimado,
+                estado
+            };
+            
+            // En una implementación real, aquí se enviarían los datos al backend
+            // Por ahora, simulamos la persistencia con localStorage
+            
+            if (isEditMode) {
+                estimacion.id = currentEstimacionId;
+                updateEstimacionInStorage(estimacion);
+            } else {
+                saveNewEstimacionToStorage(estimacion);
+            }
+            
+            // Redireccionar a la lista de estimaciones
+            window.location.href = 'estimaciones.html';
+        }
+        
+        // Función para guardar nueva estimación en localStorage
+        function saveNewEstimacionToStorage(estimacion) {
+            fetch('../../data/estimaciones.json')
+                .then(response => response.json())
+                .then(estimaciones => {
+                    // Generar nuevo ID
+                    const newId = Math.max(...estimaciones.map(e => e.id), 0) + 1;
+                    estimacion.id = newId;
+                    
+                    // Agregar a la lista
+                    estimaciones.push(estimacion);
+                    
+                    // Guardar en localStorage
+                    localStorage.setItem('mockEstimaciones', JSON.stringify(estimaciones));
+                    
+                    alert(`Estimación #${newId} creada correctamente.`);
+                })
+                .catch(error => console.error('Error guardando estimación:', error));
+        }
+        
+        // Función para actualizar estimación en localStorage
+        function updateEstimacionInStorage(estimacion) {
+            fetch('../../data/estimaciones.json')
+                .then(response => response.json())
+                .then(estimaciones => {
+                    // Encontrar índice de la estimación a actualizar
+                    const index = estimaciones.findIndex(e => e.id === estimacion.id);
+                    
+                    if (index !== -1) {
+                        // Actualizar estimación
+                        estimaciones[index] = estimacion;
+                        
+                        // Guardar en localStorage
+                        localStorage.setItem('mockEstimaciones', JSON.stringify(estimaciones));
+                        
+                        alert(`Estimación #${estimacion.id} actualizada correctamente.`);
+                    }
+                })
+                .catch(error => console.error('Error actualizando estimación:', error));
+        }
+    </script>
+</head>
+<body>
+    <!-- Header Component -->
+    <div id="header"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Component -->
+            <div id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"></div>
+            
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 id="form-title" class="h2">Nueva Estimación</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="estimaciones.html" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver al Listado
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Formulario de Estimación -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-text"></i> Formulario de Estimación
+                    </div>
+                    <div class="card-body">
+                        <form id="estimacion-form">
+                            <!-- Selección de Pedido -->
+                            <div class="mb-3">
+                                <label for="pedido-id" class="form-label">Pedido</label>
+                                <select id="pedido-id" class="form-select" required>
+                                    <option value="">Seleccione un pedido...</option>
+                                    <!-- Opciones de pedidos cargadas dinámicamente -->
+                                </select>
+                            </div>
+                            
+                            <!-- Información del Pedido -->
+                            <div id="pedido-info" class="mb-3">
+                                <!-- Información cargada dinámicamente -->
+                            </div>
+                            
+                            <!-- Servicios Estimados -->
+                            <div class="mb-3">
+                                <label class="form-label">Servicios Estimados</label>
+                                <div id="servicios-container">
+                                    <!-- Filas de servicios agregadas dinámicamente -->
+                                </div>
+                                <button type="button" id="add-servicio" class="btn btn-outline-primary mt-2">
+                                    <i class="bi bi-plus"></i> Agregar Servicio
+                                </button>
+                            </div>
+                            
+                            <!-- Total Estimado -->
+                            <div class="mb-3">
+                                <label for="total-estimado" class="form-label">Total Estimado</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" id="total-estimado" class="form-control" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Estado -->
+                            <div class="mb-3">
+                                <label for="estado" class="form-label">Estado</label>
+                                <select id="estado" class="form-select" required>
+                                    <option value="Borrador">Borrador</option>
+                                    <option value="Enviada">Enviada</option>
+                                    <option value="Aprobada">Aprobada</option>
+                                    <option value="Rechazada">Rechazada</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Botones de Acción -->
+                            <div class="d-flex justify-content-end">
+                                <button type="button" id="cancel-button" class="btn btn-secondary me-2">Cancelar</button>
+                                <button type="submit" id="submit-button" class="btn btn-primary">Guardar Estimación</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Footer Component -->
+    <div id="footer"></div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

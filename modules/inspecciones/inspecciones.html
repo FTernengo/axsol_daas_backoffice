@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXSOL DaaS - Gestión de Inspecciones</title>
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluir sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 bg-light sidebar" id="sidebar-container"></div>
+            
+            <!-- Contenido principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Incluir header -->
+                <div id="header-container"></div>
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Gestión de Inspecciones</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" id="btn-nueva-inspeccion">
+                            <i class="bi bi-plus"></i> Nueva Inspección
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Información del activo si viene filtrado -->
+                <div id="info-activo" class="card mb-4 d-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Inspecciones para el activo: <span id="activo-nombre">Nombre del Activo</span></h5>
+                                <p class="card-text mb-0">Proyecto: <span id="activo-proyecto">Nombre del Proyecto</span></p>
+                                <p class="card-text mb-0">Tipo: <span id="activo-tipo">Tipo de Activo</span></p>
+                                <p class="card-text">Sector de Integridad: <span id="activo-sector" class="badge bg-danger">Crítico</span></p>
+                            </div>
+                            <a href="activos.html" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a Activos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-activo" class="form-label">Filtrar por Activo</label>
+                        <select class="form-select" id="filtro-activo">
+                            <option value="">Todos los activos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-tipo" class="form-label">Filtrar por Tipo</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="Inspección Visual">Inspección Visual</option>
+                            <option value="Inspección Térmica">Inspección Térmica</option>
+                            <option value="Inspección Estructural">Inspección Estructural</option>
+                            <option value="Fotogrametría">Fotogrametría</option>
+                            <option value="LiDAR">LiDAR</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-estado" class="form-label">Filtrar por Estado</label>
+                        <select class="form-select" id="filtro-estado">
+                            <option value="">Todos los estados</option>
+                            <option value="Planificada">Planificada</option>
+                            <option value="En Progreso">En Progreso</option>
+                            <option value="Completada">Completada</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="filtro-fecha" class="form-label">Filtrar por Fecha</label>
+                        <input type="month" class="form-control" id="filtro-fecha">
+                    </div>
+                </div>
+
+                <!-- Tabla de Inspecciones -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Activo</th>
+                                <th scope="col">Proyecto</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inspecciones">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <nav aria-label="Paginación de inspecciones">
+                    <ul class="pagination justify-content-center" id="paginacion-inspecciones">
+                        <!-- Paginación generada dinámicamente -->
+                    </ul>
+                </nav>
+            </main>
+        </div>
+    </div>
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-labelledby="modalConfirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConfirmDeleteLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Está seguro que desea eliminar esta inspección? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluir footer -->
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        // Código del script permanece igual, solo ajustar rutas de fetch si es necesario
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar componentes usando rutas relativas
+            fetch('../../components/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                });
+            
+            fetch('../../components/sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                    // Marcar como activo el ítem del menú
+                    setTimeout(() => {
+                        const menuItem = document.querySelector('.nav-link[href="inspecciones.html"]');
+                        if (menuItem) menuItem.classList.add('active');
+                    }, 100);
+                });
+            
+            fetch('../../components/footer.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('footer-container').innerHTML = data;
+                });
+            
+            // Verificar si viene filtrado por activo
+            const urlParams = new URLSearchParams(window.location.search);
+            activoIdFiltro = urlParams.get('activoId');
+            
+            // Inicializar filtros
+            cargarActivos();
+            
+            // Si hay un filtro de activo, mostrar la información del activo
+            if (activoIdFiltro) {
+                cargarInfoActivo(activoIdFiltro);
+                document.getElementById('filtro-activo').value = activoIdFiltro;
+                document.getElementById('info-activo').classList.remove('d-none');
+            }
+            
+            // Cargar inspecciones
+            cargarInspecciones();
+            
+            // Event listeners
+            document.getElementById('btn-nueva-inspeccion').addEventListener('click', function() {
+                let url = '/modules/inspecciones/inspeccion-form.html';
+                if (activoIdFiltro) {
+                    url += `?activoId=${activoIdFiltro}`;
+                }
+                window.location.href = url;
+            });
+            
+            document.getElementById('filtro-activo').addEventListener('change', function() {
+                activoIdFiltro = this.value;
+                cargarInspecciones();
+            });
+            
+            document.getElementById('filtro-tipo').addEventListener('change', cargarInspecciones);
+            document.getElementById('filtro-estado').addEventListener('change', cargarInspecciones);
+            document.getElementById('filtro-fecha').addEventListener('change', cargarInspecciones);
+        });
+        
+        // Función para cargar activos en el filtro
+        async function cargarActivos() {
+            try {
+                const [activosResponse, proyectosResponse] = await Promise.all([
+                    fetch('/data/activos.json'),
+                    fetch('/data/proyectos.json')
+                ]);
+                
+                const activos = await activosResponse.json();
+                const proyectos = await proyectosResponse.json();
+                
+                // Mapear proyectos por ID para fácil acceso
+                const proyectosMap = proyectos.reduce((map, proyecto) => {
+                    map[proyecto.id] = proyecto;
+                    return map;
+                }, {});
+                
+                const selectActivo = document.getElementById('filtro-activo');
+                activos.forEach(activo => {
+                    const proyecto = proyectosMap[activo.proyectoId] || { nombre: 'Desconocido' };
+                    const option = document.createElement('option');
+                    option.value = activo.id;
+                    option.textContent = `${activo.nombre} (${proyecto.nombre})`;
+                    selectActivo.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar activos:', error);
+                mostrarAlerta('No se pudieron cargar los activos', 'danger');
+            }
+        }
+        
+        // Función para cargar información de un activo específico
+        async function cargarInfoActivo(activoId) {
+            try {
+                const [activosResponse, proyectosResponse] = await Promise.all([
+                    fetch('/data/activos.json'),
+                    fetch('/data/proyectos.json')
+                ]);
+                
+                const activos = await activosResponse.json();
+                const proyectos = await proyectosResponse.json();
+                
+                const activo = activos.find(a => a.id == activoId);
+                if (!activo) {
+                    mostrarAlerta('No se encontró el activo seleccionado', 'warning');
+                    return;
+                }
+                
+                const proyecto = proyectos.find(p => p.id == activo.proyectoId) || { nombre: 'Desconocido' };
+                
+                document.getElementById('activo-nombre').textContent = activo.nombre;
+                document.getElementById('activo-proyecto').textContent = proyecto.nombre;
+                document.getElementById('activo-tipo').textContent = activo.tipoActivo;
+                
+                const sectorSpan = document.getElementById('activo-sector');
+                sectorSpan.textContent = activo.sectorIntegridad;
+                sectorSpan.className = `badge ${getBadgeClass(activo.sectorIntegridad)}`;
+            } catch (error) {
+                console.error('Error al cargar información del activo:', error);
+                mostrarAlerta('No se pudo cargar la información del activo', 'danger');
+            }
+        }
+        
+        // Función para cargar inspecciones
+        async function cargarInspecciones() {
+            try {
+                // Obtener filtros
+                const filtroActivo = activoIdFiltro || document.getElementById('filtro-activo').value;
+                const filtroTipo = document.getElementById('filtro-tipo').value;
+                const filtroEstado = document.getElementById('filtro-estado').value;
+                const filtroFecha = document.getElementById('filtro-fecha').value;
+                
+                // Cargar datos
+                const [inspeccionesResponse, activosResponse, proyectosResponse] = await Promise.all([
+                    fetch('/data/inspecciones.json'),
+                    fetch('/data/activos.json'),
+                    fetch('/data/proyectos.json')
+                ]);
+                
+                const inspecciones = await inspeccionesResponse.json();
+                const activos = await activosResponse.json();
+                const proyectos = await proyectosResponse.json();
+                
+                // Mapear activos y proyectos por ID para fácil acceso
+                const activosMap = activos.reduce((map, activo) => {
+                    map[activo.id] = activo;
+                    return map;
+                }, {});
+                
+                const proyectosMap = proyectos.reduce((map, proyecto) => {
+                    map[proyecto.id] = proyecto;
+                    return map;
+                }, {});
+                
+                // Filtrar inspecciones
+                let inspeccionesFiltradas = inspecciones;
+                
+                if (filtroActivo) {
+                    inspeccionesFiltradas = inspeccionesFiltradas.filter(inspeccion => inspeccion.activoId == filtroActivo);
+                }
+                
+                if (filtroTipo) {
+                    inspeccionesFiltradas = inspeccionesFiltradas.filter(inspeccion => inspeccion.tipo === filtroTipo);
+                }
+                
+                if (filtroEstado) {
+                    inspeccionesFiltradas = inspeccionesFiltradas.filter(inspeccion => inspeccion.estado === filtroEstado);
+                }
+                
+                if (filtroFecha) {
+                    const yearMonth = filtroFecha; // Format: YYYY-MM
+                    inspeccionesFiltradas = inspeccionesFiltradas.filter(inspeccion => {
+                        const fechaInspeccion = new Date(inspeccion.fecha);
+                        const inspeccionYearMonth = `${fechaInspeccion.getFullYear()}-${String(fechaInspeccion.getMonth() + 1).padStart(2, '0')}`;
+                        return inspeccionYearMonth === yearMonth;
+                    });
+                }
+                
+                // Actualizar tabla
+                const tablaInspecciones = document.getElementById('tabla-inspecciones');
+                tablaInspecciones.innerHTML = '';
+                
+                if (inspeccionesFiltradas.length === 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="7" class="text-center">No hay inspecciones que coincidan con los filtros aplicados</td>';
+                    tablaInspecciones.appendChild(tr);
+                } else {
+                    inspeccionesFiltradas.forEach(inspeccion => {
+                        const activo = activosMap[inspeccion.activoId] || { nombre: 'Desconocido', proyectoId: null };
+                        const proyecto = proyectosMap[activo.proyectoId] || { nombre: 'Desconocido' };
+                        
+                        const fechaInspeccion = new Date(inspeccion.fecha);
+                        const fechaFormateada = fechaInspeccion.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${inspeccion.id}</td>
+                            <td>${activo.nombre}</td>
+                            <td>${proyecto.nombre}</td>
+                            <td>${fechaFormateada}</td>
+                            <td>${inspeccion.tipo}</td>
+                            <td>
+                                <span class="badge ${getEstadoBadgeClass(inspeccion.estado)}">${inspeccion.estado}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="verInspeccion(${inspeccion.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarInspeccion(${inspeccion.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarInspeccion(${inspeccion.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="verEntregables(${inspeccion.id})">
+                                        <i class="bi bi-file-earmark-text"></i> Entregables
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tablaInspecciones.appendChild(tr);
+                    });
+                }
+                
+                // Implementar paginación si es necesario
+                actualizarPaginacion(inspeccionesFiltradas.length);
+                
+            } catch (error) {
+                console.error('Error al cargar inspecciones:', error);
+                mostrarAlerta('No se pudieron cargar las inspecciones', 'danger');
+            }
+        }
+        
+        // Función para obtener clase de badge según sector de integridad
+        function getBadgeClass(sector) {
+            switch(sector) {
+                case 'Crítico': return 'bg-danger';
+                case 'Medio': return 'bg-warning text-dark';
+                case 'Bajo': return 'bg-success';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Función para obtener clase de badge según estado de inspección
+        function getEstadoBadgeClass(estado) {
+            switch(estado) {
+                case 'Planificada': return 'bg-info';
+                case 'En Progreso': return 'bg-warning text-dark';
+                case 'Completada': return 'bg-success';
+                case 'Cancelada': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // Funciones para acciones de tabla
+        function verInspeccion(id) {
+            // Implementar vista detallada (puede ser un modal o redirección)
+            alert(`Ver detalles de la inspección ID: ${id}`);
+        }
+        
+        function editarInspeccion(id) {
+            window.location.href = `/modules/inspecciones/inspeccion-form.html?id=${id}`;
+        }
+        
+        function eliminarInspeccion(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+            modal.show();
+            
+            document.getElementById('btn-confirm-delete').onclick = async function() {
+                try {
+                    // En un entorno real, aquí iría la lógica para eliminar la inspección de la base de datos
+                    // En este caso, simulamos la eliminación con localStorage
+                    const response = await fetch('/data/inspecciones.json');
+                    let inspecciones = await response.json();
+                    
+                    inspecciones = inspecciones.filter(inspeccion => inspeccion.id !== id);
+                    
+                    localStorage.setItem('inspecciones', JSON.stringify(inspecciones));
+                    
+                    modal.hide();
+                    mostrarAlerta('Inspección eliminada correctamente', 'success');
+                    cargarInspecciones();
+                } catch (error) {
+                    console.error('Error al eliminar inspección:', error);
+                    mostrarAlerta('No se pudo eliminar la inspección', 'danger');
+                }
+            };
+        }
+        
+        function verEntregables(inspeccionId) {
+            window.location.href = `/modules/inspecciones/entregables.html?inspeccionId=${inspeccionId}`;
+        }
+        
+        // Función para mostrar alertas
+        function mostrarAlerta(mensaje, tipo) {
+            const alertPlaceholder = document.createElement('div');
+            alertPlaceholder.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alertPlaceholder.role = 'alert';
+            alertPlaceholder.innerHTML = `
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertPlaceholder);
+            
+            // Auto cerrar después de 5 segundos
+            setTimeout(() => {
+                alertPlaceholder.remove();
+            }, 5000);
+        }
+        
+        // Función para actualizar paginación
+        function actualizarPaginacion(totalItems) {
+            const itemsPorPagina = 10;
+            const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+            
+            const paginacionContainer = document.getElementById('paginacion-inspecciones');
+            paginacionContainer.innerHTML = '';
+            
+            if (totalPaginas <= 1) return;
+            
+            // Botón anterior
+            const liAnterior = document.createElement('li');
+            liAnterior.className = 'page-item';
+            liAnterior.innerHTML = `<a class="page-link" href="#" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liAnterior);
+            
+            // Páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                const li = document.createElement('li');
+                li.className = i === 1 ? 'page-item active' : 'page-item';
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                paginacionContainer.appendChild(li);
+            }
+            
+            // Botón siguiente
+            const liSiguiente = document.createElement('li');
+            liSiguiente.className = 'page-item';
+            liSiguiente.innerHTML = `<a class="page-link" href="#" aria-label="Siguiente">
+                <span aria-hidden="true">&raquo;</span>
+            </a>`;
+            paginacionContainer.appendChild(liSiguiente);
+        }
+    </script>
+</body>
+</html>

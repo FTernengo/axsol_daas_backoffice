@@ -1,0 +1,58 @@
+[
+    {
+      "id": 1,
+      "activoId": 1,
+      "fecha": "2025-02-15",
+      "tipo": "Inspección Visual",
+      "estado": "Completada"
+    },
+    {
+      "id": 2,
+      "activoId": 1,
+      "fecha": "2025-03-10",
+      "tipo": "Inspección Térmica",
+      "estado": "Completada"
+    },
+    {
+      "id": 3,
+      "activoId": 2,
+      "fecha": "2025-02-20",
+      "tipo": "Inspección Estructural",
+      "estado": "Completada"
+    },
+    {
+      "id": 4,
+      "activoId": 3,
+      "fecha": "2025-03-05",
+      "tipo": "Fotogrametría",
+      "estado": "Completada"
+    },
+    {
+      "id": 5,
+      "activoId": 4,
+      "fecha": "2025-03-15",
+      "tipo": "LiDAR",
+      "estado": "En Progreso"
+    },
+    {
+      "id": 6,
+      "activoId": 5,
+      "fecha": "2025-03-18",
+      "tipo": "Inspección Térmica",
+      "estado": "En Progreso"
+    },
+    {
+      "id": 7,
+      "activoId": 2,
+      "fecha": "2025-04-05",
+      "tipo": "Fotogrametría",
+      "estado": "Planificada"
+    },
+    {
+      "id": 8,
+      "activoId": 6,
+      "fecha": "2025-01-22",
+      "tipo": "Inspección Visual",
+      "estado": "Completada"
+    }
+  ]

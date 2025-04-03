@@ -1,0 +1,44 @@
+[
+    {
+      "id": 1,
+      "nombre": "Energías Renovables S.A.",
+      "contacto": "María Fernández",
+      "email": "mfernandez@energren.com",
+      "estado": "Activo"
+    },
+    {
+      "id": 2,
+      "nombre": "Industrias Solares del Norte",
+      "contacto": "Juan Pérez",
+      "email": "jperez@indsol.com",
+      "estado": "Activo"
+    },
+    {
+      "id": 3,
+      "nombre": "Distribuidora Energética Central",
+      "contacto": "Carlos Mendoza",
+      "email": "cmendoza@distec.com",
+      "estado": "Inactivo"
+    },
+    {
+      "id": 4,
+      "nombre": "Corporación Solar Pacífico",
+      "contacto": "Ana Torres",
+      "email": "atorres@solpac.com",
+      "estado": "Activo"
+    },
+    {
+      "id": 5,
+      "nombre": "Fundación Energía Limpia",
+      "contacto": "Roberto Gómez",
+      "email": "rgomez@funlimpia.org",
+      "estado": "Activo"
+    },
+    {
+      "id": 6,
+      "nombre": "AgroSolar Servicios",
+      "contacto": "Laura Martínez",
+      "email": "lmartinez@agrosolar.com",
+      "estado": "Inactivo"
+    }
+  ]
